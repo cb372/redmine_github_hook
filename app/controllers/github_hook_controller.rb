@@ -6,13 +6,16 @@ class GithubHookController < ApplicationController
 
   def index
     if request.post?
-      repository = find_repository
+      repositories = find_repositories
 
-      # Fetch the changes from Github
-      update_repository(repository)
+      repositories.each { |x| 
+        # Fetch the changes from remote repo
+        update_repository(x) 
+      
+        # Fetch the new changesets into Redmine
+        x.fetch_changesets
+      }
 
-      # Fetch the new changesets into Redmine
-      repository.fetch_changesets
     end
 
     render(:text => 'OK')
@@ -77,13 +80,11 @@ class GithubHookController < ApplicationController
     return project
   end
 
-  # Returns the Redmine Repository object we are trying to update
-  def find_repository
+  # Returns the Redmine Repository object(s) we are trying to update
+  def find_repositories
     project = find_project
-    repository = project.repository
-    raise TypeError, "Project '#{project.to_s}' ('#{project.identifier}') has no repository" if repository.nil?
-    raise TypeError, "Repository for project '#{project.to_s}' ('#{project.identifier}') is not a Git repository" unless repository.is_a?(Repository::Git)
-    return repository
+    repositories = project.repositories
+    return repositories.select { |x| x.is_a?(Repository::Git) }
   end
 
 end
