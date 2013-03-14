@@ -1,30 +1,28 @@
 class RepositoryObserver < ActiveRecord::Observer
-  #observe Repository
-#p 'hi, observe Repository'
+
   def before_save(repository)
-      if Setting.plugin_redmine_github_hook[:enabled] && repository.type == 'Git' && repository.url.match('.*github.com')
+      if Setting.plugin_redmine_github_hook[:enabled] && repository.type.include?('Git') && repository.url.match('^(?:http|git|ssh)')
           base_dir_name = repository.url[/[\/][^\/]+.git/]
           url = repository.url
-          #p 'basedir=', base_dir_name
+          p 'basedir=', base_dir_name
           git_dir = Setting.plugin_redmine_github_hook[:git_dir].to_s
           git_dir = git_dir + base_dir_name 
-          #git_dir = '/opt/data/git_repos' + base_dir_name  #repository.project.identifier
-        if Dir[git_dir] == []
-          cmd = 'git clone --bare ' + url + ' ' + git_dir
-          if exec(cmd)
-              cmd = git_command('remote add origin '+url, git_dir)
-              exec(cmd)
-              cmd = git_command('fetch -v', git_dir)
-              exec(cmd)
-              cmd = git_command('fetch origin', git_dir)
-              exec(cmd)
-              cmd = git_command('reset --soft refs/remotes/origin/master', git_dir)
-              exec(cmd)
-              repository.url = git_dir
-          else
-              return false
-          end
-        end
+          if Dir[git_dir] == []
+              cmd = 'git clone --bare ' + url + ' ' + git_dir
+              if exec(cmd)
+                  #cmd = git_command('remote add origin '+url, git_dir)
+                  #exec(cmd)
+                  #cmd = git_command('fetch -v', git_dir)
+                  #exec(cmd)
+                  #cmd = git_command('fetch origin', git_dir)
+                  #exec(cmd)
+                  #cmd = git_command('reset --soft refs/remotes/origin/master', git_dir)
+                  #exec(cmd)
+                  repository.root_url = git_dir
+              else
+                  return false
+              end
+            end
       end
   end #defined before_save --------------
 
