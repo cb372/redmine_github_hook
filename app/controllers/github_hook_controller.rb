@@ -48,7 +48,7 @@ class GithubHookController < ApplicationController
   end
 
   def git_command(command, repository)
-    "git --git-dir='#{repository.url}' #{command}"
+    "git --git-dir='#{repository.root_url}' #{command}"
   end
 
   # Fetches updates from the remote repository
