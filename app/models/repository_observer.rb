@@ -2,7 +2,7 @@ class RepositoryObserver < ActiveRecord::Observer
 
   def before_save(repository)
       if Setting.plugin_redmine_github_hook[:enabled] && repository.type.include?('Git') && repository.url.match('^(?:http|git|ssh)')
-          base_dir_name = repository.url[/[\/][^\/]+.git/]
+          base_dir_name = repository.url[/[\/][^\/]+\.git/]
           url = repository.url
           p 'basedir=', base_dir_name
           git_dir = Setting.plugin_redmine_github_hook[:git_dir].to_s
