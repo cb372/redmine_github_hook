@@ -1,6 +1,7 @@
 class RepositoryObserver < ActiveRecord::Observer
 
   def before_save(repository)
+      repository.logger.debug 'before_save'
       if Setting.plugin_redmine_github_hook[:enabled] && repository.type.include?('Git') && repository.url.match('^(?:http|git|ssh)')
           base_dir_name = repository.url[/[\/][^\/]+\.git/]
           url = repository.url
@@ -8,21 +9,24 @@ class RepositoryObserver < ActiveRecord::Observer
           git_dir = Setting.plugin_redmine_github_hook[:git_dir].to_s
           git_dir = git_dir + base_dir_name 
           if Dir[git_dir] == []
+              repository.logger.info "Cloning a bare git repo into #{git_dir}"
               cmd = 'git clone --bare ' + url + ' ' + git_dir
               if exec(cmd)
-                  #cmd = git_command('remote add origin '+url, git_dir)
-                  #exec(cmd)
+                  cmd = git_command('remote add origin '+url, git_dir)
+                  exec(cmd)
                   #cmd = git_command('fetch -v', git_dir)
                   #exec(cmd)
-                  #cmd = git_command('fetch origin', git_dir)
-                  #exec(cmd)
+                  cmd = git_command('fetch origin', git_dir)
+                  exec(cmd)
                   #cmd = git_command('reset --soft refs/remotes/origin/master', git_dir)
                   #exec(cmd)
                   repository.root_url = git_dir
               else
                   return false
               end
-            end
+          else
+              repository.logger.info "Git repo already exists at #{git_dir} - skipping clone."
+          end
       end
   end #defined before_save --------------
 
