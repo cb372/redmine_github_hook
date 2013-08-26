@@ -20,13 +20,14 @@ class RepositoryObserver < ActiveRecord::Observer
                   exec(cmd)
                   #cmd = git_command('reset --soft refs/remotes/origin/master', git_dir)
                   #exec(cmd)
-                  repository.root_url = git_dir
               else
                   return false
               end
           else
               repository.logger.info "Git repo already exists at #{git_dir} - skipping clone."
           end
+          # Set the local clone as the root_url
+          repository.root_url = git_dir
       end
   end #defined before_save --------------
 
