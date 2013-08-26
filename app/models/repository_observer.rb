@@ -3,11 +3,11 @@ class RepositoryObserver < ActiveRecord::Observer
   def before_save(repository)
       repository.logger.debug 'before_save'
       if Setting.plugin_redmine_github_hook[:enabled] && repository.type.include?('Git') && repository.url.match('^(?:http|git|ssh)')
-          base_dir_name = repository.url[/[\/][^\/]+\.git/]
+          base_dir_name = repository.url.gsub(/[^a-zA-Z0-9\-_]/, '_')
           url = repository.url
-          p 'basedir=', base_dir_name
+          p "basedir = #{base_dir_name}"
           git_dir = Setting.plugin_redmine_github_hook[:git_dir].to_s
-          git_dir = git_dir + base_dir_name 
+          git_dir = File.join(git_dir, base_dir_name)
           if Dir[git_dir] == []
               repository.logger.info "Cloning a bare git repo into #{git_dir}"
               cmd = 'git clone --bare ' + url + ' ' + git_dir
